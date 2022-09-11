@@ -11,10 +11,6 @@
 
 ---
 
-<p align="center"> Few lines describing your project.
-    <br> 
-</p>
-
 ## 📝 Table of Contents
 
 - [About](#about)
@@ -30,8 +26,6 @@ Smart Read is a full stack Web app built in the MERN stack. It allows users to c
 ## 🏁 Getting Started <a name = "getting_started"></a>
 
 ### Prerequisites
-
-What things you need to install the software and how to install them.
 
 ```
 node -v

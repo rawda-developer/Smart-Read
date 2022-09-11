@@ -1,11 +1,15 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import config from './config';
+import router from './api';
+import bodyParser from 'body-parser';
 const app = express();
+app.use(bodyParser.json());
 const PORT = config.port;
 app.get('/', (req, res) => {
   res.send('Smart Read');
 });
+app.use('/api', router);
 app.listen(PORT, () => {
   console.log(`Listening on port ${PORT}`);
 });

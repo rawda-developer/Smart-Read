@@ -33,7 +33,7 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     res.clearCookie('token');
-    res.send({ message: 'Logged out successfully' });
+    res.json({ message: 'Logged out successfully' });
   } catch (error) {
     res.status(400).send();
   }

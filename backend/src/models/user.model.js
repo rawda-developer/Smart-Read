@@ -1,72 +1,75 @@
-import mongoose from 'mongoose';
-import uniqueValidator from 'mongoose-unique-validator';
-import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
-import config from '../config';
-const UserSchema = new mongoose.Schema(
-  {
+import mongoose from 'mongoose'
+import crypto from 'crypto'
+
+const UserSchema = new mongoose.Schema({
     name: {
-      type: String,
-      required: true,
-    },
-    username: {
-      type: String,
-      required: true,
-      unique: true,
-      required: [true, 'Name cannot be empty'],
-      match: [/^[a-zA-Z0-9]+$/, 'Name must be alphanumeric'],
-      lowercase: true,
-      index: true,
+        type: String,
+        trim: true,
+        required: 'Name is required'
     },
     email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      required: [true, 'Email cannot be empty'],
-      match: [/\S+@\S+\.\S+/, 'Email is invalid'],
-      index: true,
+        type: String,
+        trim: true,
+        unique: 'Email already exists',
+        match: [/.+@.+\..+/, 'Please fill a valid email address'],
+        required: 'Email is required'
     },
-    hash: {
-      type: String,
+    created: {
+        type: Date,
+        default: Date.now
     },
-    salt: {
-      type: String,
+    updated: Date,
+    hashedPassword: {
+        type: String,
+        required: 'Password is required'
     },
-  },
-  { timestamps: true }
-);
-UserSchema.plugin(uniqueValidator, { message: 'Username already exists' });
-UserSchema.methods.setPassword = function (password) {
-  this.salt = crypto.randomBytes(16).toString('hex');
-  this.hash = crypto
-    .pbkdf2Sync(password, this.salt, 1000, 64, 'sha512')
-    .toString('hex');
-};
-UserSchema.methods.validPassword = function (password) {
-  const hash = crypto
-    .pbkdf2Sync(password, this.salt, 1000, 64, 'sha512')
-    .toString('hex');
-  return this.hash === hash;
-};
-UserSchema.methods.generateJWT = function () {
-  const today = new Date();
-  const exp = new Date(today);
-  exp.setDate(today.getDate() + 60);
-  return jwt.sign(
-    {
-      _id: this._id,
-      username: this.username,
-      exp: parseInt(exp.getTime() / 1000),
+    about: {
+        type: String,
+        trim: true
     },
-    config.jwtSecret
-  );
-};
-UserSchema.methods.toAuthJSON = function () {
-  return {
-    username: this.username,
-    email: this.email,
-    token: this.generateJWT(),
-  };
-};
-export default mongoose.model('User', UserSchema);
+    photo: {
+        data: Buffer,
+        contentType: String
+    },
+    following: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
+    followers: [{ type: mongoose.Schema.ObjectId, ref: 'User' }],
+    salt: String
+})
+UserSchema.virtual('password')
+    .set(function (password) {
+        this._password = password
+        this.salt = this.makeSalt()
+        this.hashedPassword = this.encryptPassword(password)
+    })
+    .get(function () {
+        return this._password
+    })
+
+UserSchema.path('hashedPassword').validate(function (v) {
+    if (this._password && this._password.length < 6) {
+        this.invalidate('password', 'Password must be at least 6 characters.')
+    }
+    if (this.isNew && !this._password) {
+        this.invalidate('password', 'Password is required')
+    }
+}, null)
+
+UserSchema.methods = {
+    authenticate: function (plainText) {
+        return this.encryptPassword(plainText) === this.hashedPassword
+    },
+    encryptPassword: function (password) {
+        if (!password) return ''
+        try {
+            return crypto.createHmac('sha1', this.salt).update(password).digest('hex')
+        } catch (err) {
+            return ''
+        }
+    },
+    makeSalt: function () {
+        return Math.round(new Date().valueOf() * Math.random()) + ''
+    }
+}
+
+export default mongoose.model('User', UserSchema)
+

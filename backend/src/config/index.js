@@ -1,14 +1,14 @@
-import 'dotenv/config';
+import "dotenv/config";
 const config = {
-  env: process.env.NODE_ENV || 'development',
+  env: process.env.NODE_ENV || "development",
   port: process.env.PORT || 4000,
-  jwtSecret: process.env.JWT_SECRET || 'Secret',
+  jwtSecret: process.env.JWT_SECRET || "Secret",
   mongoUri:
     process.env.MONGODB_URI ||
-    'mongodb://' +
-      (process.env.IP || 'localhost') +
-      ':' +
-      (process.env.MONGO_PORT || '27017') +
-      '/smart-read',
+    "mongodb://" +
+      (process.env.IP || "localhost") +
+      ":" +
+      (process.env.MONGO_PORT || "27017") +
+      "/smart-read",
 };
 export default config;
